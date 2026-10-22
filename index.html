@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tính tiền đóng hàng kỳ – CEP</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--card:#f4f6f8;--bd:#d6dae0;--ac:#0b6b4f;--hl:#e6f4ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--fg:#eceef1;--mut:#9aa0a8;--card:#1f2226;--bd:#33373d;--ac:#4cc79a;--hl:#16302a}}
+:root[data-theme="dark"]{--bg:#15171a;--fg:#eceef1;--mut:#9aa0a8;--card:#1f2226;--bd:#33373d;--ac:#4cc79a;--hl:#16302a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:880px;margin-inline:auto}
+h1{font-size:19px;margin:0 0 12px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select{font:inherit;padding:7px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg)}
+.w{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{border:1px solid var(--bd);padding:7px 9px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{background:var(--card);font-size:13px}
+.t td:last-child,.t th:last-child{background:var(--hl);font-weight:700;color:var(--ac)}
+.s{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.s div{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--mut)}
+.s b{display:block;font-size:16px;color:var(--fg)}
+.n{font-size:12px;color:var(--mut);margin-top:10px}.e{color:#c0392b}
+</style></head><body>
+<h1>Tính tiền đóng hàng kỳ – CEP</h1>
+<p style="margin:-6px 0 12px;font-size:13px;color:var(--mut)">Tác giả: <b style="color:var(--fg)">Minh Tuấn - CEP CN TÂY NINH</b></p>
+<div class="g">
+<label>Số tiền vay (đồng)<input id="loan" type="text" inputmode="numeric" value="10.000.000"></label>
+<label>Kỳ hạn trả<select id="per"><option value="1">1 tuần</option><option value="2">2 tuần</option><option value="4">4 tuần</option><option value="0">Hàng tháng</option></select></label>
+<label><span>Hình thức trả</span><select id="mode"><option value="0">Bình thường</option><option value="1">Có ân hạn nợ gốc</option><option value="2">Kỳ hạn riêng (trả lãi hàng tháng)</option></select></label><label id="mpl" style="display:none"><span id="mpt"></span><select id="mp"></select></label><label><span id="tl">Thời hạn vay (tuần)</span><input id="term" type="number" value="52"></label>
+<label>Lãi suất (%/kỳ)<select id="rsel"><option value="0,10">0,10</option><option value="0,16" selected>0,16</option><option value="0,17">0,17</option><option value="0,18">0,18</option><option value="0,20">0,20</option><option value="0,32">0,32</option><option value="0,34">0,34</option><option value="0,36">0,36</option><option value="0,44">0,44</option><option value="0,68">0,68</option><option value="0,72">0,72</option><option value="0,76">0,76</option><option value="0,79">0,79</option><option value="x">Khác (nhập tay)…</option></select><input id="rate" type="text" inputmode="decimal" value="0,16" style="display:none"></label>
+<label>TKBB mỗi kỳ<select id="tkon"><option value="1">Có thu</option><option value="0">Không thu – 0</option></select></label>
+<label>Làm tròn tổng đóng lên (đồng)<select id="step"><option value="1000">1.000</option><option value="10000">10.000</option><option value="50000">50.000</option><option value="100000" selected>100.000</option><option value="150000">150.000</option><option value="200000">200.000</option><option value="250000">250.000</option><option value="300000">300.000</option><option value="350000">350.000</option><option value="400000">400.000</option><option value="450000">450.000</option><option value="500000">500.000</option><option value="550000">550.000</option><option value="600000">600.000</option><option value="650000">650.000</option><option value="700000">700.000</option><option value="750000">750.000</option><option value="800000">800.000</option><option value="850000">850.000</option><option value="900000">900.000</option><option value="950000">950.000</option><option value="1000000">1.000.000</option></select></label>
+<label>Gốc kỳ đầu – ghi đè theo bảng (tuỳ chọn)<input id="ov" type="text" inputmode="numeric" placeholder="để trống = tự tính"></label>
+</div>
+<div id="out"></div>
+<p class="n">Lãi mỗi kỳ = số vay × lãi suất (tính trên dư nợ ban đầu, khớp biểu lãi suất). Gốc kỳ đầu lấy đúng theo bảng CEP (nhân theo số tiền vay); mức lãi hoặc kỳ hạn không có trong bảng (kể cả ân hạn nợ gốc, kỳ hạn riêng) thì dùng công thức ước tính; kỳ cuối nhận phần gốc còn lại. Bảng chính thức có vài dòng được điều chỉnh tay (lệch ~500–1.000đ), khi cần khớp tuyệt đối hãy nhập “gốc kỳ đầu” từ bảng (đã nhân theo số tiền vay). TKĐH đề xuất = phần cộng thêm để (gốc + lãi + TKBB) tròn lên bội số của mức làm tròn tổng đóng (mặc định 100.000đ). Kỳ cuối giữ nguyên TKTN của kỳ đầu nên tổng đóng kỳ cuối có thể lẻ. TKBB tính theo 1% mỗi 4 tuần: 1 tuần = 0,25%, 2 tuần = 0,5%, 4 tuần và hàng tháng = 1% số tiền vay. Lãi suất thực tế = lãi suất IRR mỗi kỳ × 365 ÷ số ngày của kỳ (tuần = 7 ngày, tháng = 30 ngày), đúng cách CEP tính trong biểu lãi suất.</p>
+<p class="n">Ân hạn nợ gốc: trong thời gian ân hạn chỉ trả lãi (TKBB vẫn thu). Bảng ân hạn có sẵn: 1–3 tháng (4–12 tuần) cho mức 0,10 / 0,20 / 0,44 và 3–6 tháng cho 0,79%/tháng. Kỳ hạn riêng chỉ có ở 0,79%/tháng: lãi trả hàng tháng, gốc trả mỗi 3/4/6/12 tháng.</p>
+<script>
+const $=i=>document.getElementById(i),f=x=>String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),num=i=>+String($(i).value).replace(/\./g,'')||0;
+const W=[12,16,20,24,28,32,36,40,44,48,52,56,60,80],MO=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,24,30,36],z=(t,v)=>Object.fromEntries(t.map((x,i)=>[x,v[i]]));
+/* Gốc kỳ đầu theo bảng Thông báo 1341/TB-CEP, trên khoản vay 1.000.000đ. Khóa: lãi suất%/kỳ|kỳ trả (1,2,4 tuần; 0 = tháng) */
+const D={
+'0.1|1':z(W,[82000,62500,50000,41000,35000,30500,27500,25000,22500,20500,19000,17500,16500,12500]),
+'0.2|2':z(W,[164000,125000,100000,82000,70000,61000,55000,50000,45000,41000,38000,35000,33000,25000]),
+'0.44|4':z(W,[333600,249600,199600,165600,141600,124600,110600,99600,90600,82600,76600,70600,66600,49600]),
+'0.44|0':z(MO,[199600,165600,141600,124600,110600,99600,90600,82600,76600,70600,66600,62600,58600,55600,52600,49600,41600,33600,27600]),
+'0.16|1':z(W,[83600,61800,49800,41800,35800,30900,27900,24900,22900,20900,19400,17900,16400,12450]),
+'0.32|2':z(W,[167200,123600,99600,83600,71600,61800,55800,49800,45800,41800,38800,35800,32800,24900]),
+'0.68|4':z(W,[332200,252200,201200,167200,143200,126200,112200,101200,91200,84200,77200,72200,67200,50200]),
+'0.68|0':z(MO,[201200,167200,143200,126200,112200,101200,91200,84200,77200,72200,67200,63200,59200,56200,53200,50200,42200,33200,28200]),
+'0.17|1':z(W,[83200,61600,49600,41600,35600,30800,27800,24800,22800,20800,19300,17800,16300,12400]),
+'0.34|2':z(W,[166400,123200,99200,83200,71200,61600,55600,49600,45600,41600,38600,35600,32600,24800]),
+'0.72|4':z(W,[331800,251800,200800,166800,142800,125800,111800,100800,90800,83800,76800,71800,66800,49800]),
+'0.72|0':z(MO,[200800,166800,142800,125800,111800,100800,90800,83800,76800,71800,66800,62800,58800,55800,52800,49800,41800,32800,27800]),
+'0.76|0':z(MO,[200400,166400,142400,125400,111400,100400,90400,83400,76400,71400,66400,62400,58400,55400,52400,50400,41400,33400,27400]),
+'0.18|1':z(W,[82800,61400,49400,41400,35400,30700,27700,24700,22700,20700,19200,17700,16700,12350]),
+'0.36|2':z(W,[165600,122800,98800,82800,70800,61400,55400,49400,45400,41400,38400,35400,33400,24700]),
+'0.79|4':z(W,[331400,251400,200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,66100,50100]),
+'0.79|0':z(MO,[200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,66100,62100,58100,55100,52100,50100,41100,33100,27100]),
+'0.0475|1':z([20,40,48],[49525,25025,20525]),
+'0.095|2':z([20,40,48],[99050,50050,41050]),
+'0.2|4':z([20,40,48],[200000,100000,83000]),
+'0.2|0':z([5,10,12],[200000,100000,83000])};
+function irr(L,p){let lo=0,hi=1;for(let i=0;i<80;i++){const m=(lo+hi)/2;let pv=0;p.forEach((v,k)=>pv+=v/Math.pow(1+m,k+1));pv>L?lo=m:hi=m}return(lo+hi)/2}
+const G={},K={'12|3':[4,251200],'12|4':[3,335200],'12|6':[2,502200],'15|3':[5,200100],'16|4':[4,251100],'18|3':[6,167100],'18|6':[3,334100],'24|3':[8,125600],'24|4':[6,167600],'24|6':[4,251100],'24|12':[2,500800],'36|3':[12,83100],'36|4':[9,111100],'36|6':[6,167400],'36|12':[3,333100]};
+(function(){const w1=[16,20,24,28,32,36,40,44,48,52],w2=w1.slice(1),w3=w1.slice(2),m1=[6,7,8,9,10,11,12],m2=m1.slice(1),m3=m1.slice(2),S=(k,t,v)=>{G[k]=z(t,v)};
+S('0.1|1|1',w1,[82500,62000,50000,41000,35500,31000,27500,25000,22500,20500]);
+S('0.2|2|1',w1,[165000,124000,100000,82000,71000,62000,55000,50000,45000,41000]);
+S('0.44|4|1',w1,[329600,249600,199600,165600,141600,124600,110600,99600,89600,82000]);
+S('0.44|0|1',m1,[199600,165600,141600,124600,110600,99600,89600]);
+S('0.1|1|2',w2,[82500,62000,50000,41500,35500,31000,27500,25000,22500]);
+S('0.2|2|2',w2,[165000,124000,100000,83000,71000,62000,55000,50000,45000]);
+S('0.44|4|2',w2,[329600,249600,199600,165600,141600,124600,110600,99600,90000]);
+S('0.44|0|2',m2,[199600,165600,141600,124600,110600,99600]);
+S('0.1|1|3',w3,[83000,62000,50000,41500,35500,31000,27500,25000]);
+S('0.2|2|3',w3,[166000,124000,100000,83000,71000,62000,55000,50000]);
+S('0.44|4|3',w3,[329600,249600,199600,165600,141600,124600,110600,99400]);
+S('0.44|0|3',m3,[199600,165600,141600,124600,110600]);
+const T=(a)=>a.concat([24,30,36]),r=(x,y)=>Array.from({length:y-x+1},(_,i)=>x+i);
+S('0.79|0|3',T(r(8,20)),[200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,66100,62100,59100,47100,37100,30100]);
+S('0.79|0|4',T(r(9,20)),[200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,66100,62100,50100,38100,31100]);
+S('0.79|0|5',T(r(10,20)),[200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,66100,52100,40100,32100]);
+S('0.79|0|6',T(r(11,20)),[200100,166100,142100,125100,111100,100100,90100,83100,76100,71100,55100,41100,33100]);})();
+function fillMp(){const m=+$('mode').value,v=m==1?[1,2,3,4,5,6]:[3,4,6,12];$('mpl').style.display=m?'flex':'none';$('mpt').textContent=m==1?'Ân hạn nợ gốc (tháng)':'Trả gốc mỗi (tháng)';$('mp').innerHTML=v.map(x=>'<option value="'+x+'">'+x+' tháng</option>').join('')}
+function calc(){
+const L=num('loan'),per=+$('per').value,term=+$('term').value,rate=parseFloat(String($('rate').value).replace(',','.')),st=+$('step').value,ov=num('ov'),mode=+$('mode').value,mp=+$('mp').value;
+$('tl').textContent='Thời hạn vay ('+(per?'tuần':'tháng')+')';
+const len=per||1,n=Math.round(term/len),o=$('out'),ta=Math.round(L*0.01*(per?per/4:1)),tk=$('tkon').value==='0'?0:ta;$('tkon').options[0].text='Có thu – '+(isFinite(ta)?f(ta):'0');
+const err=m=>{o.innerHTML='<p class="e">'+m+'</p>'};
+if(!(L>0&&term>0&&rate>=0&&n>=1))return err('Vui lòng nhập đủ thông tin hợp lệ.');
+const warn=Math.abs(term/len-n)>1e-9?'<p class="e">Thời hạn vay không chia hết cho kỳ trả, đã làm tròn thành '+n+' kỳ.</p>':'';
+const I=Math.round(L*rate/100),rk=String(+rate.toFixed(4)),u=per==1?500:1000,sc=v=>Math.round(v*L/1e6),est=m=>Math.floor((L/m+I+L/1e4)/u)*u-I,fix=(e,m)=>m==1?L:(e<=0||e*(m-1)>=L?Math.floor(L/m):e);
+let src='ước tính bằng công thức (không có trong bảng)',R=[],pays=[],e,last;
+const lab=(a,b)=>a>=b?'kỳ '+b:'kỳ '+a+'–'+b;
+if(mode==0){const tv=(D[rk+'|'+per]||{})[term];if(ov>0){e=ov;src='ghi đè theo bạn nhập'}else if(tv){e=sc(tv);src='khớp bảng CEP'}else e=est(n);
+e=fix(e,n);last=L-(n-1)*e;
+if(n>1){R.push({k:'Kỳ đầu ('+lab(1,n-1)+')',g:e,w:n-1,early:1});for(let i=1;i<n;i++)pays.push(e+I)}
+R.push({k:n>1?'Kỳ cuối (kỳ '+n+')':'Kỳ duy nhất',g:last,w:1,l:1});pays.push(last+I)}
+else if(mode==1){const ng=per?4*mp/per:mp;if(!Number.isInteger(ng)||ng>=n)return err('Thời gian ân hạn phải ngắn hơn thời hạn vay.');
+const m=n-ng,tv=((G[rk+'|'+per+'|'+mp])||{})[term];if(ov>0){e=ov;src='ghi đè theo bạn nhập'}else if(tv){e=sc(tv);src='khớp bảng ân hạn CEP'}else e=est(m);
+e=fix(e,m);last=L-(m-1)*e;R.push({k:'Trong ân hạn ('+lab(1,ng)+')',g:0,w:ng});for(let i=0;i<ng;i++)pays.push(I);
+if(m>1){R.push({k:'Sau ân hạn – kỳ đầu ('+lab(ng+1,n-1)+')',g:e,w:m-1,early:1});for(let i=1;i<m;i++)pays.push(e+I)}
+R.push({k:'Kỳ cuối (kỳ '+n+')',g:last,w:1,l:1});pays.push(last+I)}
+else{if(per!=0)return err('Kỳ hạn riêng chỉ áp dụng khi chọn kỳ trả “Hàng tháng”.');const np=term/mp;if(!Number.isInteger(np))return err('Thời hạn vay phải chia hết cho kỳ trả gốc.');
+const kd=K[term+'|'+mp];if(ov>0){e=ov;src='ghi đè theo bạn nhập'}else if(kd&&rk=='0.79'){e=sc(kd[1]);src='khớp bảng kỳ hạn riêng CEP'}else e=Math.round(L/np/100)*100;
+e=fix(e,np);last=L-(np-1)*e;
+if(term-np>0)R.push({k:'Kỳ chỉ trả lãi ('+(term-np)+' kỳ)',g:0,w:term-np});
+if(np>1)R.push({k:'Kỳ trả gốc đầu ('+(np-1)+' kỳ)',g:e,w:np-1,early:1});
+R.push({k:'Kỳ cuối (kỳ '+term+')',g:last,w:1,l:1});
+for(let i=1;i<=term;i++)pays.push(I+(i%mp==0?(i/mp<np?e:last):0))}
+let h='<p class="n">Gốc: <b>'+src+'</b></p><div class="w"><table class="t"><tr><th>Kỳ</th><th>Gốc</th><th>Lãi</th><th>TKBB</th><th>Gốc + lãi + TKBB</th><th>TKĐH đề xuất</th><th>Tổng đóng (tròn)</th></tr>';
+let sv=0,d0=null;R.forEach(r=>{const s=r.g+I+tk,d=(r.l&&d0!==null)?d0:Math.ceil(s/st)*st-s;if(r.early)d0=d;sv+=d*r.w;h+='<tr><td>'+r.k+'</td><td>'+f(r.g)+'</td><td>'+f(I)+'</td><td>'+f(tk)+'</td><td>'+f(s)+'</td><td>'+f(d)+'</td><td>'+f(s+d)+'</td></tr>'});
+const py=365/(per?7*per:30),ir=irr(L,pays)*py*100;
+h+='</table></div><div class="s"><div>Số kỳ trả<b>'+n+'</b></div><div>Tổng gốc<b>'+f(L)+'</b></div><div>Tổng lãi<b>'+f(I*n)+'</b></div><div>Tổng gốc + lãi<b>'+f(L+I*n)+'</b></div><div>TKBB dư đến cuối kỳ<b>'+f(tk*n)+'</b></div><div>TKTN (TKĐH) dư đến cuối kỳ<b>'+f(sv)+'</b></div><div>Tổng tiết kiệm dư cuối kỳ<b>'+f(tk*n+sv)+'</b></div><div>Lãi suất thực tế (ước tính)<b>'+ir.toFixed(2).replace('.',',')+'%/năm</b></div></div>';
+o.innerHTML=warn+h}
+$('rsel').addEventListener('input',()=>{const v=$('rsel').value,r=$('rate');if(v==='x'){r.style.display='';r.focus();r.select()}else{r.style.display='none';r.value=v}});
+fillMp();$('mode').addEventListener('input',fillMp);
+['loan','ov'].forEach(i=>$(i).addEventListener('input',e=>{const d=e.target.value.replace(/\D/g,'');e.target.value=d?f(d):''}));
+document.querySelectorAll('input,select').forEach(x=>x.addEventListener('input',calc));calc();
+</script></body></html>
